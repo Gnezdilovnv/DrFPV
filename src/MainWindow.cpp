@@ -1,3 +1,4 @@
+#include <QTextToSpeech>
 #include "MainWindow.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -20,6 +21,7 @@
 #include <QDialogButtonBox>
 #include <QFileDialog>
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_sdr(new SDRController(this)), m_processor(new SignalProcessor(this)), m_visualizer(new Visualizer(this)), m_recorder(new RecordManager(this)), m_settings(new SettingsManager(this)) {
+    m_speech = new QTextToSpeech(this);
     setupUI();
     loadSettings();
     connect(m_sdr,&SDRController::statusMessage,this,&MainWindow::onStatusMessage);
@@ -256,3 +258,8 @@ void MainWindow::loadSettings(){
                               m_settings->value("Scan/end_freq",6000e6).toDouble());
 }
 void MainWindow::saveSettings(){ m_settings->sync(); }
+void MainWindow::voiceAlert(const QString &msg){
+    if(m_speech && m_settings->value("Alerts/voice_enabled",true).toBool()){
+        m_speech->say(msg);
+    }
+}

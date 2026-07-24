@@ -15,16 +15,34 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake qt5-qmake qtbase5-dev libiio-dev
+          sudo apt-get install -y cmake qt5-qmake qtbase5-dev libiio-dev libqt5texttospeech5-dev
       - name: Configure
         run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
       - name: Build
         run: cd build && make -j$(nproc)
+      - name: Collect shared libraries
+        run: |
+          mkdir -p package/usr/lib
+          cp build/DrFPV package/usr/bin/
+          ldd build/DrFPV | grep "=> /" | awk '{print $3}' | while read lib; do
+            if [[ "$lib" != /lib/* && "$lib" != /usr/lib/*-linux-gnu/* ]]; then
+              cp -v "$lib" package/usr/lib/ || true
+            fi
+          done
+          cp -v /usr/lib/*/libiio.so* package/usr/lib/ || true
+          cp -v /usr/lib/*/libQt5TextToSpeech.so* package/usr/lib/ || true
+          cat > package/run.sh << 'RUN'
+#!/bin/bash
+DIR="$(cd "$(dirname "$0")" && pwd)"
+export LD_LIBRARY_PATH="$DIR/usr/lib:$LD_LIBRARY_PATH"
+exec "$DIR/usr/bin/DrFPV" "$@"
+RUN
+          chmod +x package/run.sh package/usr/bin/DrFPV
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: DrFPV-linux-x64
-          path: build/DrFPV
+          path: package/
 
   build-windows:
     runs-on: windows-latest
@@ -58,8 +76,17 @@ jobs:
           cd build
           cmake --build . --config Release
         shell: cmd
+      - name: Deploy Qt and collect dependencies
+        run: |
+          mkdir package
+          copy build\Release\DrFPV.exe package\
+          windeployqt --release --no-translations --no-opengl --no-system-d3d-compiler package\DrFPV.exe
+          copy C:\libiio\bin\libiio.dll package\
+          for /f "delims=" %i in ('where vcruntime140.dll') do copy "%i" package\
+          for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
+        shell: cmd
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: DrFPV-windows-x64
-          path: build/Release/DrFPV.exe
+          path: package/
