@@ -1,0 +1,13 @@
+name: Build DrFPV
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: sudo apt update && sudo apt install -y cmake qt5-qmake qtbase5-dev libiio-dev
+    - run: mkdir build && cd build && cmake .. && make -j$(nproc)
+    - uses: actions/upload-artifact@v3
+      with:
+        name: DrFPV-linux
+        path: build/DrFPV

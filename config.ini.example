@@ -1,0 +1,7 @@
+[General] language=ru theme=dark fullscreen=false
+[SDR] ip=192.168.2.1 rx_frequency=2400000000 tx_frequency=2400000000 sample_rate=5000000 rx_bandwidth=18000000 tx_bandwidth=18000000 rx_gain1=30.0 rx_gain2=30.0 tx_gain=-10.0 gain_mode=manual agc_enabled=false dc_offset_tracking=true quadrature_tracking=true fir_filters_enabled=true buffer_size=4096 enable_2r2t=true enable_tx=false
+[Scan] start_freq=70000000 end_freq=6000000000 step=1000000 speed=10 pause=100 continuous=true threshold=10.0 detect_dji=true detect_lora=true detect_fpv=true detect_wifi=true
+[Video] enabled=true resolution=640x480 fps=25 codec=x264 bitrate=1000000 format=mp4 auto_record=false record_threshold=15.0 stop_threshold=5.0 min_duration=2 max_duration=60
+[Recording] save_video=true save_iq=false save_spectrogram=true save_reports=true video_folder=./video iq_folder=./iq spectrogram_folder=./spectrograms reports_folder=./reports
+[Alerts] voice_enabled=true voice_volume=50 sound_enabled=true popup_enabled=true notify_video=true notify_control=true notify_wifi=true
+[Paths] video=./video snapshots=./snapshots iq=./iq reports=./reports database=./database.db
