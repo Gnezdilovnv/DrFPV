@@ -24,20 +24,13 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Ninja
-        run: choco install ninja -y
-        shell: powershell
-
-      - name: Install libiio via vcpkg
+      - name: Download and extract libiio
         run: |
-          git clone https://github.com/Microsoft/vcpkg.git
-          .\vcpkg\bootstrap-vcpkg.bat
-          .\vcpkg\vcpkg install libiio:x64-windows
-        shell: cmd
-
-      - name: Debug - list installed files
-        run: |
-          dir D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\lib
+          curl -L -o libiio.zip https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-x64.zip
+          mkdir libiio
+          tar -xf libiio.zip -C libiio
+          dir libiio\bin
+          dir libiio\lib
         shell: cmd
 
       - name: Configure CMake
@@ -46,9 +39,8 @@ jobs:
           cd build
           cmake -G Ninja ^
                 -DCMAKE_BUILD_TYPE=Release ^
-                -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ^
-                -DVCPKG_ROOT=D:\a\DrFPV\DrFPV\vcpkg ^
-                -DVCPKG_TARGET_TRIPLET=x64-windows ^
+                -DLIBIIO_INCLUDE_DIR=D:\a\DrFPV\DrFPV\libiio\include ^
+                -DLIBIIO_LIBRARY=D:\a\DrFPV\DrFPV\libiio\lib\libiio.lib ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd
@@ -64,7 +56,7 @@ jobs:
           mkdir package
           copy build\DrFPV.exe package\
           windeployqt --release --no-translations --no-opengl --no-system-d3d-compiler package\DrFPV.exe
-          copy D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\bin\libiio.dll package\
+          copy D:\a\DrFPV\DrFPV\libiio\bin\libiio.dll package\
           for /f "delims=" %i in ('where vcruntime140.dll') do copy "%i" package\
           for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
         shell: cmd
