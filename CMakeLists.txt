@@ -17,35 +17,21 @@ else()
     set(HAVE_TEXT_TO_SPEECH FALSE)
 endif()
 
-# libiio – use explicit paths from environment or command line
-if(DEFINED LIBIIO_INCLUDE_DIR AND DEFINED LIBIIO_LIBRARY)
-    set(LIBIIO_FOUND TRUE)
-    message(STATUS "Using explicit libiio paths: ${LIBIIO_INCLUDE_DIR}, ${LIBIIO_LIBRARY}")
-elseif(WIN32)
-    # Try to find in vcpkg default location
-    set(VCPKG_INSTALLED_DIR_DEFAULT "D:/a/DrFPV/DrFPV/vcpkg/installed/x64-windows")
-    if(EXISTS "${VCPKG_INSTALLED_DIR_DEFAULT}/include/iio.h")
-        set(LIBIIO_INCLUDE_DIR "${VCPKG_INSTALLED_DIR_DEFAULT}/include")
-        set(LIBIIO_LIBRARY "${VCPKG_INSTALLED_DIR_DEFAULT}/lib/libiio.lib")
-        set(LIBIIO_FOUND TRUE)
-        message(STATUS "Found libiio in default vcpkg location")
-    else()
-        # Fallback to find_path/find_library
-        find_path(LIBIIO_INCLUDE_DIR iio.h)
-        find_library(LIBIIO_LIBRARY iio libiio)
-        if(LIBIIO_INCLUDE_DIR AND LIBIIO_LIBRARY)
-            set(LIBIIO_FOUND TRUE)
-        endif()
-    endif()
-else()
-    # Linux: use pkg-config
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBIIO REQUIRED libiio)
-    set(LIBIIO_FOUND TRUE)
-endif()
+# libiio – find via vcpkg or system
+find_path(LIBIIO_INCLUDE_DIR
+    NAMES iio.h
+    PATHS ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include
+          ${CMAKE_PREFIX_PATH}/include
+)
 
-if(NOT LIBIIO_FOUND)
-    message(FATAL_ERROR "libiio not found. Please provide LIBIIO_INCLUDE_DIR and LIBIIO_LIBRARY.")
+find_library(LIBIIO_LIBRARY
+    NAMES iio libiio
+    PATHS ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib
+          ${CMAKE_PREFIX_PATH}/lib
+)
+
+if(NOT LIBIIO_INCLUDE_DIR OR NOT LIBIIO_LIBRARY)
+    message(FATAL_ERROR "libiio not found. Check VCPKG_ROOT and VCPKG_TARGET_TRIPLET")
 endif()
 
 set(SOURCES

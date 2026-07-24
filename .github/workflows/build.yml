@@ -35,6 +35,11 @@ jobs:
           .\vcpkg\vcpkg install libiio:x64-windows
         shell: cmd
 
+      - name: Debug - list installed files
+        run: |
+          dir D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\lib
+        shell: cmd
+
       - name: Configure CMake
         run: |
           mkdir build
@@ -44,8 +49,6 @@ jobs:
                 -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ^
                 -DVCPKG_ROOT=D:\a\DrFPV\DrFPV\vcpkg ^
                 -DVCPKG_TARGET_TRIPLET=x64-windows ^
-                -DLIBIIO_INCLUDE_DIR=D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\include ^
-                -DLIBIIO_LIBRARY=D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\lib\iio.lib ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd
