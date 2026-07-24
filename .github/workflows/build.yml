@@ -1,53 +1,16 @@
-name: Build DrFPV
+name: Build DrFPV for Windows
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake qt5-qmake qtbase5-dev libiio-dev libqt5texttospeech5-dev
-      - name: Configure
-        run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
-      - name: Build
-        run: cd build && make -j$(nproc)
-      - name: Collect shared libraries
-        run: |
-          mkdir -p package/usr/lib
-          cp build/DrFPV package/usr/bin/
-          ldd build/DrFPV | grep "=> /" | awk '{print $3}' | while read lib; do
-            if [[ "$lib" != /lib/* && "$lib" != /usr/lib/*-linux-gnu/* ]]; then
-              cp -v "$lib" package/usr/lib/ || true
-            fi
-          done
-          cp -v /usr/lib/*/libiio.so* package/usr/lib/ || true
-          cp -v /usr/lib/*/libQt5TextToSpeech.so* package/usr/lib/ || true
-          cat > package/run.sh << 'RUN'
-      #!/bin/bash
-      DIR="$(cd "$(dirname "$0")" && pwd)"
-      export LD_LIBRARY_PATH="$DIR/usr/lib:$LD_LIBRARY_PATH"
-      exec "$DIR/usr/bin/DrFPV" "$@"
-      RUN
-          chmod +x package/run.sh package/usr/bin/DrFPV
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: DrFPV-linux-x64
-          path: package/
-
-  build-windows:
+  build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -57,25 +20,30 @@ jobs:
           arch: 'win64_msvc2019_64'
           dir: '${{ github.workspace }}/qt'
           setup-python: false
+
       - name: Install libiio
         run: |
           Invoke-WebRequest -Uri https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-x64.exe -OutFile libiio-setup.exe
           .\libiio-setup.exe /S /D=C:\libiio
         shell: powershell
+
       - name: Add libiio to PATH
         run: echo "C:\libiio\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: powershell
+
       - name: Configure CMake
         run: |
           mkdir build
           cd build
           cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
         shell: cmd
+
       - name: Build
         run: |
           cd build
           cmake --build . --config Release
         shell: cmd
+
       - name: Deploy Qt and collect dependencies
         run: |
           mkdir package
@@ -85,6 +53,7 @@ jobs:
           for /f "delims=" %i in ('where vcruntime140.dll') do copy "%i" package\
           for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
         shell: cmd
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
