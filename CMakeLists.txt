@@ -18,14 +18,24 @@ else()
 endif()
 
 # Ищем libiio
-find_path(LIBIIO_INCLUDE_DIR NAMES iio.h)
-find_library(LIBIIO_LIBRARY NAMES iio libiio)
+find_path(LIBIIO_INCLUDE_DIR iio.h
+    PATHS ${CMAKE_PREFIX_PATH}/include
+          ${VCPKG_ROOT}/installed/x64-windows/include
+    DOC "Path to libiio include directory"
+)
+
+find_library(LIBIIO_LIBRARY
+    NAMES iio libiio
+    PATHS ${CMAKE_PREFIX_PATH}/lib
+          ${VCPKG_ROOT}/installed/x64-windows/lib
+    DOC "Path to libiio library"
+)
 
 if(LIBIIO_INCLUDE_DIR AND LIBIIO_LIBRARY)
     set(LIBIIO_FOUND TRUE)
     message(STATUS "libiio found: ${LIBIIO_LIBRARY}")
 else()
-    message(FATAL_ERROR "libiio not found. Please install libiio development package.")
+    message(FATAL_ERROR "libiio not found. Set LIBIIO_INCLUDE_DIR and LIBIIO_LIBRARY or install libiio.")
 endif()
 
 set(SOURCES
