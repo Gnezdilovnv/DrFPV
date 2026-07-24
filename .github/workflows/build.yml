@@ -32,11 +32,11 @@ jobs:
           cp -v /usr/lib/*/libiio.so* package/usr/lib/ || true
           cp -v /usr/lib/*/libQt5TextToSpeech.so* package/usr/lib/ || true
           cat > package/run.sh << 'RUN'
-#!/bin/bash
-DIR="$(cd "$(dirname "$0")" && pwd)"
-export LD_LIBRARY_PATH="$DIR/usr/lib:$LD_LIBRARY_PATH"
-exec "$DIR/usr/bin/DrFPV" "$@"
-RUN
+      #!/bin/bash
+      DIR="$(cd "$(dirname "$0")" && pwd)"
+      export LD_LIBRARY_PATH="$DIR/usr/lib:$LD_LIBRARY_PATH"
+      exec "$DIR/usr/bin/DrFPV" "$@"
+      RUN
           chmod +x package/run.sh package/usr/bin/DrFPV
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
