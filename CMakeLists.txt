@@ -8,8 +8,6 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 COMPONENTS Core Widgets Gui Network Concurrent REQUIRED)
-
-# TextToSpeech – опционально
 find_package(Qt5TextToSpeech QUIET)
 if(Qt5TextToSpeech_FOUND)
     message(STATUS "Qt5TextToSpeech found – voice alerts enabled")
@@ -19,8 +17,16 @@ else()
     set(HAVE_TEXT_TO_SPEECH FALSE)
 endif()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBIIO REQUIRED libiio)
+# Ищем libiio
+find_path(LIBIIO_INCLUDE_DIR NAMES iio.h)
+find_library(LIBIIO_LIBRARY NAMES iio libiio)
+
+if(LIBIIO_INCLUDE_DIR AND LIBIIO_LIBRARY)
+    set(LIBIIO_FOUND TRUE)
+    message(STATUS "libiio found: ${LIBIIO_LIBRARY}")
+else()
+    message(FATAL_ERROR "libiio not found. Please install libiio development package.")
+endif()
 
 set(SOURCES
     src/main.cpp
@@ -43,14 +49,14 @@ set(HEADERS
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${LIBIIO_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIBIIO_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}
     Qt5::Core
     Qt5::Widgets
     Qt5::Gui
     Qt5::Network
     Qt5::Concurrent
-    ${LIBIIO_LIBRARIES}
+    ${LIBIIO_LIBRARY}
     pthread
 )
 
