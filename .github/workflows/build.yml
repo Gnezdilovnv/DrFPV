@@ -24,28 +24,21 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install libiio via Chocolatey
-        run: choco install libiio -y
-        shell: powershell
-
-      - name: Find libiio installation
-        id: find
+      - name: Download and install libiio
         run: |
-          # Chocolatey installs libiio to C:\ProgramData\chocolatey\lib\libiio\build\native\
-          $libPath = "C:\ProgramData\chocolatey\lib\libiio\build\native"
-          if (Test-Path $libPath) {
-            Write-Host "Found libiio at $libPath"
-            echo "LIBIIO_DIR=$libPath" | Out-File -FilePath $env:GITHUB_ENV -Append
-          } else {
-            # Fallback to default Program Files
-            $libPath = "C:\Program Files\libiio"
-            if (Test-Path $libPath) {
-              Write-Host "Found libiio at $libPath"
-              echo "LIBIIO_DIR=$libPath" | Out-File -FilePath $env:GITHUB_ENV -Append
-            } else {
-              throw "libiio not found"
-            }
-          }
+          curl -L -o libiio-setup.exe https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-setup.exe
+          if exist libiio-setup.exe (
+            echo "Installer downloaded successfully"
+            start /wait libiio-setup.exe /S /D=C:\libiio
+          ) else (
+            echo "Download failed, trying alternative URL"
+            curl -L -o libiio-setup.exe https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-x64.exe
+            start /wait libiio-setup.exe /S /D=C:\libiio
+          )
+        shell: cmd
+
+      - name: Add libiio to PATH
+        run: echo "C:\libiio\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: powershell
 
       - name: Configure CMake
@@ -54,8 +47,8 @@ jobs:
           cd build
           cmake -G Ninja ^
                 -DCMAKE_BUILD_TYPE=Release ^
-                -DLIBIIO_INCLUDE_DIR="C:\ProgramData\chocolatey\lib\libiio\build\native\include" ^
-                -DLIBIIO_LIBRARY="C:\ProgramData\chocolatey\lib\libiio\build\native\lib\iio.lib" ^
+                -DLIBIIO_INCLUDE_DIR=C:\libiio\include ^
+                -DLIBIIO_LIBRARY=C:\libiio\lib\libiio.lib ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd
@@ -71,7 +64,7 @@ jobs:
           mkdir package
           copy build\DrFPV.exe package\
           windeployqt --release --no-translations --no-opengl --no-system-d3d-compiler package\DrFPV.exe
-          copy "C:\ProgramData\chocolatey\lib\libiio\build\native\bin\libiio.dll" package\
+          copy C:\libiio\bin\libiio.dll package\
           for /f "delims=" %i in ('where vcruntime140.dll') do copy "%i" package\
           for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
         shell: cmd
