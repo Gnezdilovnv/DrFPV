@@ -17,26 +17,8 @@ else()
     set(HAVE_TEXT_TO_SPEECH FALSE)
 endif()
 
-# Ищем libiio
-find_path(LIBIIO_INCLUDE_DIR iio.h
-    PATHS ${CMAKE_PREFIX_PATH}/include
-          ${VCPKG_ROOT}/installed/x64-windows/include
-    DOC "Path to libiio include directory"
-)
-
-find_library(LIBIIO_LIBRARY
-    NAMES iio libiio
-    PATHS ${CMAKE_PREFIX_PATH}/lib
-          ${VCPKG_ROOT}/installed/x64-windows/lib
-    DOC "Path to libiio library"
-)
-
-if(LIBIIO_INCLUDE_DIR AND LIBIIO_LIBRARY)
-    set(LIBIIO_FOUND TRUE)
-    message(STATUS "libiio found: ${LIBIIO_LIBRARY}")
-else()
-    message(FATAL_ERROR "libiio not found. Set LIBIIO_INCLUDE_DIR and LIBIIO_LIBRARY or install libiio.")
-endif()
+# vcpkg provides libiio
+find_package(libiio CONFIG REQUIRED)
 
 set(SOURCES
     src/main.cpp
@@ -59,14 +41,13 @@ set(HEADERS
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${LIBIIO_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}
     Qt5::Core
     Qt5::Widgets
     Qt5::Gui
     Qt5::Network
     Qt5::Concurrent
-    ${LIBIIO_LIBRARY}
+    libiio::libiio
     pthread
 )
 
