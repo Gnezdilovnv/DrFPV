@@ -1,6 +1,8 @@
 #include "SDRController.h"
 #include <cstring>
-extern "C" { #include <iio.h> }
+extern "C" {
+#include <iio.h>
+}
 SDRController::SDRController(QObject *parent) : QObject(parent) {}
 SDRController::~SDRController() { stopStream(); disconnectDevice(); }
 bool SDRController::connectToDevice(const QString &ip) {

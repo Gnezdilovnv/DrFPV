@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
+#include <QTextEdit>
+#include <QListWidget>
+#include <QLabel>
 #include <QTimer>
 #include <QSystemTrayIcon>
 #include "SDRController.h"
