@@ -39,6 +39,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release ^
                 -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ^
                 -DVCPKG_ROOT=D:\a\DrFPV\DrFPV\vcpkg ^
+                -DVCPKG_TARGET_TRIPLET=x64-windows ^
+                -DCMAKE_PREFIX_PATH="D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows" ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd

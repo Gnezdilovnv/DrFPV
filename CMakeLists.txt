@@ -17,8 +17,24 @@ else()
     set(HAVE_TEXT_TO_SPEECH FALSE)
 endif()
 
-# vcpkg provides libiio
-find_package(libiio CONFIG REQUIRED)
+# Ручной поиск libiio (vcpkg не предоставляет libiioConfig.cmake)
+find_path(LIBIIO_INCLUDE_DIR
+    NAMES iio.h
+    PATHS ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include
+          ${CMAKE_PREFIX_PATH}/include
+    DOC "Path to libiio include directory"
+)
+
+find_library(LIBIIO_LIBRARY
+    NAMES iio libiio
+    PATHS ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib
+          ${CMAKE_PREFIX_PATH}/lib
+    DOC "Path to libiio library"
+)
+
+if(NOT LIBIIO_INCLUDE_DIR OR NOT LIBIIO_LIBRARY)
+    message(FATAL_ERROR "libiio not found. Check VCPKG_ROOT and VCPKG_TARGET_TRIPLET")
+endif()
 
 set(SOURCES
     src/main.cpp
@@ -41,13 +57,14 @@ set(HEADERS
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIBIIO_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}
     Qt5::Core
     Qt5::Widgets
     Qt5::Gui
     Qt5::Network
     Qt5::Concurrent
-    libiio::libiio
+    ${LIBIIO_LIBRARY}
     pthread
 )
 
