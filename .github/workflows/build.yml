@@ -24,14 +24,15 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Download libiio
+      - name: Install libiio
         run: |
-          curl -L -o libiio.zip https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-x64.zip
-          mkdir libiio
-          tar -xf libiio.zip -C libiio
-          dir libiio\bin
-          dir libiio\lib
+          curl -L -o libiio-setup.exe https://github.com/analogdevicesinc/libiio/releases/download/v0.25/libiio-0.25-windows-setup.exe
+          start /wait libiio-setup.exe /S /D=C:\libiio
         shell: cmd
+
+      - name: Add libiio to PATH
+        run: echo "C:\libiio\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: powershell
 
       - name: Configure CMake
         run: |
@@ -39,8 +40,8 @@ jobs:
           cd build
           cmake -G Ninja ^
                 -DCMAKE_BUILD_TYPE=Release ^
-                -DLIBIIO_INCLUDE_DIR=D:\a\DrFPV\DrFPV\libiio\include ^
-                -DLIBIIO_LIBRARY=D:\a\DrFPV\DrFPV\libiio\lib\iio.lib ^
+                -DLIBIIO_INCLUDE_DIR=C:\libiio\include ^
+                -DLIBIIO_LIBRARY=C:\libiio\lib\libiio.lib ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd
@@ -56,7 +57,7 @@ jobs:
           mkdir package
           copy build\DrFPV.exe package\
           windeployqt --release --no-translations --no-opengl --no-system-d3d-compiler package\DrFPV.exe
-          copy D:\a\DrFPV\DrFPV\libiio\bin\libiio.dll package\
+          copy C:\libiio\bin\libiio.dll package\
           for /f "delims=" %i in ('where vcruntime140.dll') do copy "%i" package\
           for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
         shell: cmd
