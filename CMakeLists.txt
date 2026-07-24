@@ -7,20 +7,20 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5 COMPONENTS Core Widgets Gui Network Concurrent TextToSpeech REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets Gui Network Concurrent REQUIRED)
+
+# TextToSpeech – опционально
+find_package(Qt5TextToSpeech QUIET)
+if(Qt5TextToSpeech_FOUND)
+    message(STATUS "Qt5TextToSpeech found – voice alerts enabled")
+    set(HAVE_TEXT_TO_SPEECH TRUE)
+else()
+    message(STATUS "Qt5TextToSpeech NOT found – voice alerts disabled")
+    set(HAVE_TEXT_TO_SPEECH FALSE)
+endif()
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBIIO REQUIRED libiio)
-
-# OpenCV (опционально, если есть)
-find_package(OpenCV QUIET)
-if(OpenCV_FOUND)
-    set(USE_OPENCV TRUE)
-    add_definitions(-DUSE_OPENCV)
-    message(STATUS "OpenCV found – video recording enabled")
-else()
-    set(USE_OPENCV FALSE)
-    message(STATUS "OpenCV not found – video recording disabled")
-endif()
 
 set(SOURCES
     src/main.cpp
@@ -50,13 +50,13 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Gui
     Qt5::Network
     Qt5::Concurrent
-    Qt5::TextToSpeech
     ${LIBIIO_LIBRARIES}
     pthread
 )
 
-if(OpenCV_FOUND)
-    target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+if(HAVE_TEXT_TO_SPEECH)
+    target_link_libraries(${PROJECT_NAME} Qt5::TextToSpeech)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_TEXT_TO_SPEECH)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
