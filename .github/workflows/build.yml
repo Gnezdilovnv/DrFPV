@@ -21,6 +21,9 @@ jobs:
           dir: '${{ github.workspace }}/qt'
           setup-python: false
 
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install vcpkg and libiio
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
@@ -36,7 +39,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ..
+          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ..
         shell: cmd
 
       - name: Build
