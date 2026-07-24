@@ -11,15 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v4
         with:
-          version: '5.15.2'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
-          dir: '${{ github.workspace }}/qt'
-          setup-python: false
+          path: D:\a\DrFPV\DrFPV\qt\Qt
+          key: ${{ runner.os }}-qt-5.15.2-msvc2019_64
+
+      - name: Install Qt (if not cached)
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          choco install 7zip -y
+          python -m pip install --upgrade aqtinstall
+          python -m aqt install-qt windows desktop 5.15.2 win64_msvc2019_64 --outputdir D:\a\DrFPV\DrFPV\qt\Qt --external 7z --mirror https://mirrors.tuna.tsinghua.edu.cn/qt
+        shell: powershell
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
