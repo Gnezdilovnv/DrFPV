@@ -24,18 +24,14 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install vcpkg and libiio
+      - name: Install libiio via vcpkg
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat
           .\vcpkg\vcpkg install libiio:x64-windows
         shell: cmd
 
-      - name: Add vcpkg to PATH
-        run: echo "D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        shell: powershell
-
-      - name: Configure with Ninja
+      - name: Configure CMake
         run: |
           mkdir build
           cd build
@@ -43,7 +39,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release ^
                 -DCMAKE_TOOLCHAIN_FILE=D:\a\DrFPV\DrFPV\vcpkg\scripts\buildsystems\vcpkg.cmake ^
                 -DVCPKG_ROOT=D:\a\DrFPV\DrFPV\vcpkg ^
-                -DCMAKE_PREFIX_PATH="D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows" ^
+                -DLIBIIO_INCLUDE_DIR=D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\include ^
+                -DLIBIIO_LIBRARY=D:\a\DrFPV\DrFPV\vcpkg\installed\x64-windows\lib\libiio.lib ^
                 -DCMAKE_CXX_COMPILER=cl.exe ^
                 -DCMAKE_C_COMPILER=cl.exe ..
         shell: cmd
@@ -54,7 +51,7 @@ jobs:
           ninja
         shell: cmd
 
-      - name: Deploy Qt and collect dependencies
+      - name: Deploy Qt and dependencies
         run: |
           mkdir package
           copy build\DrFPV.exe package\
@@ -64,7 +61,7 @@ jobs:
           for /f "delims=" %i in ('where msvcp140.dll') do copy "%i" package\
         shell: cmd
 
-      - name: Upload Windows artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: DrFPV-windows-x64
